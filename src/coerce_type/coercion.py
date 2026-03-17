@@ -1,5 +1,5 @@
-from types import UnionType, NoneType
-from typing import Any, Type, TypeVar, get_args, get_origin, Union
+from types import NoneType, UnionType
+from typing import Any, Type, TypeVar, Union, get_args, get_origin, ParamSpec
 
 T = TypeVar("T")
 
@@ -12,26 +12,9 @@ def coerce(
     str_truthiness: bool = False,
 ) -> T:
     kwargs = {"lower_true_strings": lower_true_strings, "str_truthiness": str_truthiness}
-    if get_origin(type_) == list:
-        member_type = get_args(type_)[0]
-        return [coerce(member, member_type, **kwargs) for member in obj]
-    if get_origin(type_) == dict:
-        key_type, value_type = get_args(type_)
-        return {coerce(key, key_type, **kwargs): coerce(value, value_type, **kwargs) for key, value in obj.items()}
-    if get_origin(type_) == Union:
-        # prioritize keeping None as none and not coerce it to something else
-        if NoneType in get_args(type_):
-            try:
-                return coerce(obj, NoneType, **kwargs)
-            except ValueError:
-                pass
-        for type_in_union in get_args(type_):
-            try:
-                return coerce(obj, type_in_union, **kwargs)
-            except ValueError:
-                pass
-        else:
-            raise ValueError(f"Cannot coerce {obj} to {type_}")
+    origin_type = get_origin(type_)
+    if origin_type is not None:
+        return coerce_generic(obj, origin_type, get_args(type_), **kwargs)
     if isinstance(obj, type_):
         return obj
     if type_ in (int, float, str):
@@ -42,3 +25,29 @@ def coerce(
         else:
             return bool(obj)
     raise ValueError(f"Cannot coerce {obj} to {type_}")
+
+def coerce_generic(obj: Any, origin_type: ParamSpec, type_args: tuple[Any, ...], **kwargs) -> T:
+    if origin_type == list:
+        member_type = type_args[0]
+        return [coerce(member, member_type, **kwargs) for member in obj]
+    if origin_type == dict:
+        key_type, value_type = type_args
+        return {coerce(key, key_type, **kwargs): coerce(value, value_type, **kwargs) for key, value in obj.items()}
+    if origin_type in (Union, UnionType):
+        return coerce_union(obj, origin_type, type_args, **kwargs)
+    raise TypeError(f"Cannot recognize generic type {origin_type}")
+
+def coerce_union(obj: Any, origin_type: ParamSpec, type_args: tuple[Any, ...], **kwargs) -> T:
+    # prioritize keeping None as none and not coerce it to something else
+    if NoneType in type_args:
+        try:
+            return coerce(obj, NoneType, **kwargs)
+        except ValueError:
+            pass
+    for type_in_union in type_args:
+        try:
+            return coerce(obj, type_in_union, **kwargs)
+        except ValueError:
+            pass
+    else:
+        raise ValueError(f"Cannot coerce {obj} to {origin_type} with type arguments {type_args}")

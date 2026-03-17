@@ -28,9 +28,15 @@ dependencies = [
   "pytest",
   "pytest-cov", # Optional: for coverage reports
 ]
+keep_env = true
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
+python = [
+  "3.10",
+  "3.11",
+  "3.12",
+  "3.13",
+  "3.14"]
 
 [tool.hatch.envs.test.scripts]
 test = "pytest {args:tests}"
