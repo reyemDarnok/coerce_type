@@ -1,3 +1,5 @@
+from enum import Enum
+
 import pytest
 
 import coerce_type
@@ -115,3 +117,22 @@ def test_optional():
 def test_optional_fail() -> None:
     with pytest.raises(ValueError):
         assert coerce_type.coerce("some text", int | None)
+
+
+class SampleEnum(Enum):
+    ONE = 1
+    TWO = 2
+    THREE = 3
+
+
+def test_enum_by_value():
+    assert coerce_type.coerce(1, SampleEnum) == SampleEnum.ONE
+
+
+def test_enum_by_name():
+    assert coerce_type.coerce("ONE", SampleEnum) == SampleEnum.ONE
+
+
+def test_enum_fail() -> None:
+    with pytest.raises(ValueError):
+        coerce_type.coerce("some text", SampleEnum)
