@@ -208,5 +208,14 @@ class MultiConstructor:
 def test_constructor(value, type_, result) -> None:
     assert coerce_type.coerce(value, type_) == result
 
-def test_custom() -> None:
-    assert coerce_type.coerce("2001-01-01", datetime.date) == datetime.date(2001, 1, 1)
+
+@pytest.mark.parametrize(
+    "value, result",
+    [
+        ("2001-01-01", datetime.datetime(2001, 1, 1)),
+        (978303600, datetime.datetime(2001, 1, 1)),
+    ],
+)
+
+def test_custom(value, result) -> None:
+    assert coerce_type.coerce(value, datetime.datetime) == result
