@@ -24,33 +24,38 @@ import coerce_type
 def test_default_args(obj, typ, result) -> None:
     assert coerce_type.coerce(obj, typ) == result
 
+
 def test_non_str_bool_conversion() -> None:
-    assert coerce_type.coerce([1], bool) == True
-    assert coerce_type.coerce([], bool) == False
+    assert coerce_type.coerce([1], bool)
+    assert not coerce_type.coerce([], bool)
+
 
 def test_str_truthiness() -> None:
-    assert coerce_type.coerce("False", bool, str_truthiness=True) == True
-    assert coerce_type.coerce("", bool, str_truthiness=True) == False
+    assert coerce_type.coerce("False", bool, str_truthiness=True)
+    assert not coerce_type.coerce("", bool, str_truthiness=True)
+
 
 def test_custom_str_truthiness() -> None:
-    assert coerce_type.coerce("Really", bool, lower_true_strings=("really",)) == True
-    assert coerce_type.coerce("Nah", bool, lower_true_strings=("really",)) == False
-    assert coerce_type.coerce("True", bool, lower_true_strings=("really",)) == False
+    assert coerce_type.coerce("Really", bool, lower_true_strings=("really",))
+    assert not coerce_type.coerce("Nah", bool, lower_true_strings=("really",))
+    assert not coerce_type.coerce("True", bool, lower_true_strings=("really",))
+
 
 def test_custom_str_truthiness_is_overridden() -> None:
-    assert coerce_type.coerce("Really", bool, str_truthiness=True, lower_true_strings=("really",)) == True
-    assert coerce_type.coerce("Nah", bool, str_truthiness=True, lower_true_strings=("really",)) == True
-    assert coerce_type.coerce("a", bool, str_truthiness=True, lower_true_strings=("really",)) == True
-    assert coerce_type.coerce("", bool, str_truthiness=True, lower_true_strings=("really",)) == False
-
+    assert coerce_type.coerce("Really", bool, str_truthiness=True, lower_true_strings=("really",))
+    assert coerce_type.coerce("Nah", bool, str_truthiness=True, lower_true_strings=("really",))
+    assert coerce_type.coerce("a", bool, str_truthiness=True, lower_true_strings=("really",))
+    assert not coerce_type.coerce("", bool, str_truthiness=True, lower_true_strings=("really",))
 
 
 def test_fail_builtin() -> None:
     with pytest.raises(ValueError):
         coerce_type.coerce("some text", int)
 
+
 def test_fail_non_builtin() -> None:
     class CustomClass:
         pass
+
     with pytest.raises(ValueError):
         coerce_type.coerce("some text", CustomClass)
