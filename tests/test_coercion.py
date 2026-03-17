@@ -59,3 +59,9 @@ def test_fail_non_builtin() -> None:
 
     with pytest.raises(ValueError):
         coerce_type.coerce("some text", CustomClass)
+
+def test_typing_lists() -> None:
+    assert coerce_type.coerce([1,2,3], list[str]) == ["1", "2", "3"]
+
+def test_typing_list_kwargs() -> None:
+    assert coerce_type.coerce(["Really",0,1], list[bool], lower_true_strings=("really",)) == [True, False, True]
