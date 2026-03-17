@@ -52,4 +52,4 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I"] # Error, Pyflakes, and Isort
-ignore = []
+ignore = ["E721"] # is and isinstance cannot replace get_origin
