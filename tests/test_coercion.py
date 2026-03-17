@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from enum import Enum
-from typing import Literal
+from typing import ClassVar, Generic, Literal
 
 import pytest
 
@@ -147,9 +148,27 @@ def test_literal_fail() -> None:
     with pytest.raises(ValueError):
         coerce_type.coerce(49, Literal[42])
 
+
 def test_multi_val_literal() -> None:
-    assert coerce_type.coerce(42, Literal[1,2,3,42]) == 42
+    assert coerce_type.coerce(42, Literal[1, 2, 3, 42]) == 42
+
 
 def test_multi_type_literal() -> None:
-    assert coerce_type.coerce(42, Literal[42, "The Answer"]) == 42
+    assert coerce_type.coerce("42", Literal["The Answer", 42]) == 42
     assert coerce_type.coerce("The Answer", Literal[42, "The Answer"]) == "The Answer"
+
+
+def test_class_var() -> None:
+    assert coerce_type.coerce(10, ClassVar[int]) == 10
+
+
+def test_generic() -> None:
+    assert coerce_type.coerce(5, Generic) == 5
+
+
+def test_callable() -> None:
+    def sample_func(a: int, b: int) -> int:
+        return a + b
+
+    coerced = coerce_type.coerce(sample_func, Callable[[str, str], str])
+    assert coerced("1", "2") == "3"
