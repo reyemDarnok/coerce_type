@@ -15,6 +15,9 @@ def coerce(
     if get_origin(typ) == list:
         member_type = get_args(typ)[0]
         return [coerce(member, member_type, **kwargs) for member in obj]
+    if get_origin(typ) == dict:
+        key_type, value_type = get_args(typ)
+        return {coerce(key, key_type, **kwargs): coerce(value, value_type, **kwargs) for key, value in obj.items()}
     if isinstance(obj, typ):
         return obj
     if typ in (int, float, str):

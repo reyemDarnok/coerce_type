@@ -65,3 +65,10 @@ def test_typing_lists() -> None:
 
 def test_typing_list_kwargs() -> None:
     assert coerce_type.coerce(["Really",0,1], list[bool], lower_true_strings=("really",)) == [True, False, True]
+
+def test_typing_dicts() -> None:
+    assert coerce_type.coerce({"0.2": "1", "0.5": "2"}, dict[float, int]) == {0.2: 1, 0.5: 2}
+
+def test_typing_dicts_kwargs() -> None:
+    assert coerce_type.coerce({"0.2": "1", "0.5": "2"}, dict[float, bool],
+                              lower_true_strings=("2",)) == {0.2: False, 0.5: True}
