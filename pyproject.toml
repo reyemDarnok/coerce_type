@@ -44,7 +44,7 @@ check = "ruff check {args:src tests} --fix"
 format = "ruff format {args:src tests}"
 
 [tool.ruff]
-line-length = 80
+line-length = 120
 target-version = "py310"
 
 [tool.ruff.lint]
