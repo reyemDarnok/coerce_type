@@ -138,9 +138,18 @@ def test_enum_fail() -> None:
     with pytest.raises(ValueError):
         coerce_type.coerce("some text", SampleEnum)
 
+
 def test_literal() -> None:
-    assert coerce_type.coerce(42, Literal[42]) == 42
+    assert coerce_type.coerce("42", Literal[42]) == 42
+
 
 def test_literal_fail() -> None:
     with pytest.raises(ValueError):
         coerce_type.coerce(49, Literal[42])
+
+def test_multi_val_literal() -> None:
+    assert coerce_type.coerce(42, Literal[1,2,3,42]) == 42
+
+def test_multi_type_literal() -> None:
+    assert coerce_type.coerce(42, Literal[42, "The Answer"]) == 42
+    assert coerce_type.coerce("The Answer", Literal[42, "The Answer"]) == "The Answer"
