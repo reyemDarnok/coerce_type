@@ -1,1 +1,1 @@
-from .coercion import coerce
+from .coercion import coerce as coerce

@@ -15,3 +15,38 @@ source = "vcs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/coerce_type"]
+
+[tool.hatch.envs.default.scripts]
+all = [
+  "hatch run lint:check",
+  "hatch run lint:format",
+  "hatch run test:test-cov",
+]
+
+[tool.hatch.envs.test]
+dependencies = [
+  "pytest",
+  "pytest-cov", # Optional: for coverage reports
+]
+
+[tool.hatch.envs.test.scripts]
+test = "pytest {args:tests}"
+test-cov = "pytest --cov=src/coerce_type {args:tests}"
+
+[tool.hatch.envs.lint]
+detached = true
+dependencies = [
+  "ruff",
+]
+
+[tool.hatch.envs.lint.scripts]
+check = "ruff check {args:src tests} --fix"
+format = "ruff format {args:src tests}"
+
+[tool.ruff]
+line-length = 80
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"] # Error, Pyflakes, and Isort
+ignore = []
