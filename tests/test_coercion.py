@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Literal
 
 import pytest
 
@@ -136,3 +137,10 @@ def test_enum_by_name():
 def test_enum_fail() -> None:
     with pytest.raises(ValueError):
         coerce_type.coerce("some text", SampleEnum)
+
+def test_literal() -> None:
+    assert coerce_type.coerce(42, Literal[42]) == 42
+
+def test_literal_fail() -> None:
+    with pytest.raises(ValueError):
+        coerce_type.coerce(49, Literal[42])

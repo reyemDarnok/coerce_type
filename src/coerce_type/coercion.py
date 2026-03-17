@@ -1,7 +1,7 @@
 import sys
 from enum import Enum
 from types import NoneType, UnionType
-from typing import Any, ParamSpec, Type, TypeVar, Union, get_args, get_origin
+from typing import Any, ParamSpec, Type, TypeVar, Union, get_args, get_origin, Literal
 
 T = TypeVar("T")
 
@@ -32,6 +32,13 @@ def coerce(
 
 
 def coerce_generic(obj: Any, origin_type: ParamSpec, type_args: tuple[Any, ...], **kwargs) -> T:
+    get_origin(obj)
+    if origin_type == Literal:
+        coerced_obj = coerce(obj, type(type_args[0]), **kwargs)  # attempt to match the type of the literal
+        if coerced_obj == type_args[0]:
+            return type_args[0]
+        else:
+            raise ValueError(f"Cannot coerce {obj} to Literal {type_args[0]}")
     if origin_type == list:
         member_type = type_args[0]
         return [coerce(member, member_type, **kwargs) for member in obj]
