@@ -1,4 +1,5 @@
 import collections
+import datetime
 import inspect
 import sys
 from enum import Enum
@@ -7,6 +8,7 @@ from types import NoneType, UnionType
 from typing import Any, Callable, ClassVar, Generic, Literal, ParamSpec, Type, TypeVar, Union, get_args, get_origin
 
 T = TypeVar("T")
+S = TypeVar("S")
 
 
 def coerce(
@@ -16,12 +18,22 @@ def coerce(
     echo_on_failure: bool = False,
     lower_true_strings: tuple[str] = ("true", "t", "1", "yes", "y", "on"),
     str_truthiness: bool = False,
+    custom_type_converters: dict[Type[T], dict[Type[S], Callable[[S], T]]] = None,
 ) -> T:
+    type_converters = {
+        datetime.datetime: {float: datetime.datetime.fromtimestamp, str: datetime.datetime.fromisoformat},
+        datetime.date: {float: datetime.date.fromtimestamp, str: datetime.date.fromisoformat},
+    }
+    if custom_type_converters:
+        type_converters.update(custom_type_converters)
     kwargs = {
         "lower_true_strings": lower_true_strings,
         "str_truthiness": str_truthiness,
         "echo_on_failure": echo_on_failure,
+        "custom_type_converters": type_converters,
     }
+    if type_ in type_converters:
+        return coerce_custom(obj, type_, **kwargs)
     origin_type = get_origin(type_)
     if origin_type is not None:
         return coerce_generic(obj, origin_type, get_args(type_), **kwargs)
@@ -39,11 +51,11 @@ def coerce(
     # noinspection PyBroadException
     try:
         return coerce_constructor(obj, type_, **kwargs)
-    except Exception:
+    except Exception as e:
         if echo_on_failure:
             return obj
         else:
-            raise ValueError(f"Cannot coerce {obj} to {type_}")
+            raise ValueError(f"Cannot coerce {obj} to {type_}") from e
 
 
 def coerce_generic(obj: Any, origin_type: ParamSpec, type_args: tuple[Any, ...], **kwargs) -> T:
@@ -178,7 +190,7 @@ def coerce_constructor(obj: Any, type_: Type[T], **kwargs) -> T:
             return type_(**obj)
         except Exception:
             pass
-    if isinstance(obj, list):
+    elif isinstance(obj, list):
         try:
             return type_(*obj)
         except Exception:
@@ -186,9 +198,30 @@ def coerce_constructor(obj: Any, type_: Type[T], **kwargs) -> T:
     else:
         try:
             return type_(obj)
-        except Exception:
-            pass
-    if kwargs["echo_on_failure"]:
-        return obj
+        except Exception as e:
+            if kwargs["echo_on_failure"]:
+                return obj
+            else:
+                raise ValueError(f"Cannot coerce {obj} to type {type_}") from e
+
+
+C = TypeVar("C")
+
+
+def coerce_custom(obj: Any, type_: Type[C], **kwargs) -> C:
+    converters: dict[Type[C], dict[Type[S], Callable[[S], C]]] = kwargs["custom_type_converters"]
+    type_converters = converters[type_]
+    if type(obj) in type_converters:
+        return type_converters[type(obj)](obj)
     else:
-        raise ValueError(f"Cannot coerce {obj} to type {type_}")
+        for source_type, converter in type_converters.items():
+            try:
+                source = coerce(obj, source_type, **kwargs)
+            except ValueError:
+                break
+            return converter(source)
+        else:
+            raise ValueError(
+                f"No custom coercion possible for type {type_}. "
+                f"Coercion to any of the following types not possible: {type_converters.keys()}"
+            )

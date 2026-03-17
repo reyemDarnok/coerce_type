@@ -1,3 +1,4 @@
+import datetime
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
@@ -174,22 +175,38 @@ def test_callable() -> None:
     coerced = coerce_type.coerce(sample_func, Callable[[str, str], str])
     assert coerced("1", "2") == "3"
 
+
 @dataclass
 class DirectConstructor:
     a: int
+
 
 @dataclass
 class MultiConstructor:
     a: int
     b: int
 
+
 @pytest.mark.parametrize(
     "value, type_, result",
     [
         (5, DirectConstructor, DirectConstructor(5)),
-        ([1,2,], MultiConstructor, MultiConstructor(1,2,)),
-        ({"a": 4, "b":5}, MultiConstructor, MultiConstructor(a=4, b=5)),
-    ]
+        (
+            [
+                1,
+                2,
+            ],
+            MultiConstructor,
+            MultiConstructor(
+                1,
+                2,
+            ),
+        ),
+        ({"a": 4, "b": 5}, MultiConstructor, MultiConstructor(a=4, b=5)),
+    ],
 )
 def test_constructor(value, type_, result) -> None:
     assert coerce_type.coerce(value, type_) == result
+
+def test_custom() -> None:
+    assert coerce_type.coerce("2001-01-01", datetime.date) == datetime.date(2001, 1, 1)
