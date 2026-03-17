@@ -36,10 +36,14 @@ def coerce(
             return obj.lower() in lower_true_strings
         else:
             return bool(obj)
-    if echo_on_failure:
-        return obj
-    else:
-        raise ValueError(f"Cannot coerce {obj} to {type_}")
+    # noinspection PyBroadException
+    try:
+        return coerce_constructor(obj, type_, **kwargs)
+    except Exception:
+        if echo_on_failure:
+            return obj
+        else:
+            raise ValueError(f"Cannot coerce {obj} to {type_}")
 
 
 def coerce_generic(obj: Any, origin_type: ParamSpec, type_args: tuple[Any, ...], **kwargs) -> T:
@@ -162,3 +166,29 @@ def coerce_callable(obj: Any, type_args: tuple[Any, ...], **kwargs):
         return return_coercer(res)
 
     return coercion_wrapper
+
+
+# noinspection PyBroadException
+# the woe of libraries calling user-code: Having no idea what kind of exceptions can be thrown
+def coerce_constructor(obj: Any, type_: Type[T], **kwargs) -> T:
+    if isinstance(obj, dict):
+        # noinspection PyBroadException
+
+        try:
+            return type_(**obj)
+        except Exception:
+            pass
+    if isinstance(obj, list):
+        try:
+            return type_(*obj)
+        except Exception:
+            pass
+    else:
+        try:
+            return type_(obj)
+        except Exception:
+            pass
+    if kwargs["echo_on_failure"]:
+        return obj
+    else:
+        raise ValueError(f"Cannot coerce {obj} to type {type_}")
