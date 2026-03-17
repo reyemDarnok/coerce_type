@@ -216,6 +216,5 @@ def test_constructor(value, type_, result) -> None:
         (978303600, datetime.datetime(2001, 1, 1)),
     ],
 )
-
 def test_custom(value, result) -> None:
     assert coerce_type.coerce(value, datetime.datetime) == result
