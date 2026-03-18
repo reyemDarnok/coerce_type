@@ -30,7 +30,7 @@ def TypeCorrecting() -> Type[TypeCorrectingType]:
 
     # noinspection PyDecorator
     @classmethod
-    def from_dict(cls, env):
+    def from_dict(cls, env: dict):
         return cls(**{k: v for k, v in env.items() if k in inspect.signature(cls).parameters})
 
     # noinspection PyTypeChecker
