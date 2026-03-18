@@ -6,11 +6,47 @@ or be set to happen automatically for a dataclass by having it inherit a `TypeCo
 
 ## Installation
 
-Currently only a manual installation is possible, but an upload to pip is planned.
 ```shell
-git clone git@github.com:reyemDarnok/coerce_type.git
-cd coerce_type
-hatch build
-pip install ./dist/coerce_type-1.0.2-py3-none-any.whl
+pip install coerce_type
 ```
+
+## Usage
+There are two main uses of this library:
+The `coerce` function and the `TypeCorrecting` class constructor.
+
+### `coerce`
+```pycon
+>>> from coerce_type import coerce
+>>> target_type = int
+>>> value = "1"
+>>> coerce(value, target_type)
+1
+```
+
+### `TypeCorrecting`
+
+```pycon
+>>>import datetime from coerce_type import TypeCorrecting, TypeCorrectingType
+>>> from dataclasses import dataclass
+>>> from datetime import date
+>>> @dataclass()
+>>> class Example(TypeCorrecting()):
+>>>     a: int
+>>>     b: datetime.date
+>>> data = {
+>>>     "a": "1",
+>>>     "b": "2022-01-01"
+>>> }
+>>> example = Example(**data)
+>>> example.a
+1
+>>> example.b
+datetime.date(2022, 1, 1)
+>>> isinstance(example, TypeCorrectingType)
+True
+>>> issubclass(Example,TypeCorrectingType)
+True
+```
+
+
 
