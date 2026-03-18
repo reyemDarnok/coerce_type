@@ -45,10 +45,14 @@ packages = ["src/coerce_type"]
 
 [tool.hatch.envs.default.scripts]
 all = [
+  "hatch run verify",
+  "hatch build"
+]
+
+verify = [
   "hatch run lint:check",
   "hatch run lint:format",
   "hatch run test:test-cov",
-  "hatch build"
 ]
 
 [tool.hatch.envs.test]

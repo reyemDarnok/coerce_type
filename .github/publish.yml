@@ -1,0 +1,43 @@
+name: Publish to PyPI and GitHub
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-n-publish:
+    name: Build, Publish, and Release
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write      # Required for PyPI OIDC
+      contents: write      # Required to create a GitHub Release
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0    # Critical for hatch-vcs to determine version
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.14"
+
+    - name: Install Hatch
+      run: pip install --upgrade hatch
+
+    - name: Verify tests
+      run: hatch run verify
+
+    - name: Build distributions
+      run: hatch build
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        # This grabs all files in the dist/ folder created by hatch build
+        files: dist/*
+        generate_release_notes: true
