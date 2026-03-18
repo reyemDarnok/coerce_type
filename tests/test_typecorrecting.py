@@ -26,3 +26,20 @@ def test_simple(
     coerced = Simple(**args)
     assert coerced.a == a
     assert coerced.b == b
+
+
+@pytest.mark.parametrize(
+    "args, a, b",
+    [
+        ({"a": 1, "b": "text"}, 1, "text"),
+        ({"a": "4", "b": True, "c": "ignore me"}, 4, "True"),
+    ],
+)
+def test_from_dict(
+    args,
+    a,
+    b,
+):
+    coerced = Simple.from_dict(args)
+    assert coerced.a == a
+    assert coerced.b == b
