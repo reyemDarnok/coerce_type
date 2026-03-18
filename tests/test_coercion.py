@@ -213,7 +213,7 @@ def test_constructor(value, type_, result) -> None:
     "value, result",
     [
         ("2001-01-01", datetime.datetime(2001, 1, 1)),
-        (978303600, datetime.datetime(2001, 1, 1)),
+        (978307200, datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc)),
     ],
 )
 def test_custom(value, result) -> None:

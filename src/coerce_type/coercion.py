@@ -2,6 +2,7 @@ import collections
 import datetime
 import inspect
 import sys
+from datetime import timezone
 from enum import Enum
 from functools import partial
 from types import NoneType, UnionType
@@ -31,7 +32,10 @@ def coerce(
     :raises ValueError: When type coercion fails and echo_on_failure is False.
     """
     type_converters = {
-        datetime.datetime: {float: datetime.datetime.fromtimestamp, str: datetime.datetime.fromisoformat},
+        datetime.datetime: {
+            float: partial(datetime.datetime.fromtimestamp, tz=timezone.utc),
+            str: datetime.datetime.fromisoformat,
+        },
         datetime.date: {float: datetime.date.fromtimestamp, str: datetime.date.fromisoformat},
     }
     if custom_type_converters:
