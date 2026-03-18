@@ -20,6 +20,16 @@ def coerce(
     str_truthiness: bool = False,
     custom_type_converters: dict[Type[T], dict[Type[S], Callable[[S], T]]] = None,
 ) -> T:
+    """Coerce a value to a given type. Complex nested types are supported.
+    :param obj: The value to coerce.
+    :param type_: The target type.
+    :param echo_on_failure: When type coercion fails return input obj instead of ValueError.
+    :param lower_true_strings: A list of lowercase strings that are treated as True for boolean conversion.
+    :param str_truthiness: If True, use python truthiness for strings instead of lower_true_strings.
+    :param custom_type_converters: Custom type converters {str: {int: nice_int_formatter }}
+                                    would call nice_int_formatter when coercing an int to a str.
+    :raises ValueError: When type coercion fails and echo_on_failure is False.
+    """
     type_converters = {
         datetime.datetime: {float: datetime.datetime.fromtimestamp, str: datetime.datetime.fromisoformat},
         datetime.date: {float: datetime.date.fromtimestamp, str: datetime.date.fromisoformat},
@@ -59,6 +69,12 @@ def coerce(
 
 
 def coerce_generic(obj: Any, origin_type: ParamSpec, type_args: tuple[Any, ...], **kwargs) -> T:
+    """Coerce a value to match a given generic type. Prefer coerce if you are unsure.
+    :param obj: The value to coerce.
+    :param origin_type: The target Generic Type. I.e. list for list[int]
+    :param type_args: The arguments to the generic type. I.e. (int,) for list[int]
+    :param kwargs: See coerce for details
+    :raises ValueError: When type coercion fails and echo_on_failure is False."""
     if origin_type == Generic:
         return obj
     if origin_type in (Callable, collections.abc.Callable):
@@ -74,14 +90,19 @@ def coerce_generic(obj: Any, origin_type: ParamSpec, type_args: tuple[Any, ...],
         key_type, value_type = type_args
         return {coerce(key, key_type, **kwargs): coerce(value, value_type, **kwargs) for key, value in obj.items()}
     if origin_type in (Union, UnionType):
-        return coerce_union(obj, origin_type, type_args, **kwargs)
+        return coerce_union(obj, type_args, **kwargs)
     if kwargs["echo_on_failure"]:
         return obj
     else:
         raise TypeError(f"Cannot recognize generic type {origin_type}")
 
 
-def coerce_union(obj: Any, origin_type: ParamSpec, type_args: tuple[Any, ...], **kwargs) -> T:
+def coerce_union(obj: Any, type_args: tuple[Any, ...], **kwargs) -> T:
+    """Coerce a value to a member of a union of types.
+    :param obj: The value to coerce.
+    :param type_args: The member types of the union
+    :param kwargs: See coerce for details
+    :raises ValueError: When type coercion fails and echo_on_failure is False."""
     # prioritize keeping None as none and not coerce it to something else
     if NoneType in type_args:
         try:
@@ -97,13 +118,19 @@ def coerce_union(obj: Any, origin_type: ParamSpec, type_args: tuple[Any, ...], *
         if kwargs["echo_on_failure"]:
             return obj
         else:
-            raise ValueError(f"Cannot coerce {obj} to {origin_type} with type arguments {type_args}")
+            raise ValueError(f"Cannot coerce {obj} to Union with members {type_args}")
 
 
 E = TypeVar("E", bound=Enum)
 
 
 def coerce_enum(obj: Any, type_: Type[E], **kwargs) -> E:
+    """Coerce a value to a member of an enum. Will attempt to match both by name and value of the enum member
+    :param obj: The value to coerce.
+    :param type_: The target Enum
+    :param kwargs: See coerce for details
+    :raises ValueError: When type coercion fails and echo_on_failure is False.
+    """
     if sys.version_info >= (3, 12):
         if obj in type_:
             return type_(obj)
@@ -121,6 +148,13 @@ def coerce_enum(obj: Any, type_: Type[E], **kwargs) -> E:
 
 
 def coerce_literal(obj: Any, literals: tuple[Any, ...], **kwargs) -> Any:
+    """Coerce a value to a literal type. Will type coerce a value to match the types of the literal,
+    trying first for exact matches and then attempts to type coerce in the order of the literal.
+    :param obj: The value to coerce.
+    :param literals: The target literals
+    :param kwargs: See coerce for details
+    :raises ValueError: When type coercion fails and echo_on_failure is False.
+    """
     try:
         return literals[literals.index(obj)]
     except ValueError:
@@ -140,6 +174,15 @@ def coerce_literal(obj: Any, literals: tuple[Any, ...], **kwargs) -> Any:
 
 
 def coerce_callable(obj: Any, type_args: tuple[Any, ...], **kwargs):
+    """Coerce a callable to a given type signature.
+    Will attempt to type coerce each argument from type_args to the signature of obj
+    and the return value of obj to the return value in type_args
+    :param obj: The callable to coerce.
+    :param type_args: The target signature
+    :param kwargs: See coerce for details
+    :returns: A wrapper around the callable. This wrapper may throw a ValueError
+              when the coercion of arguments of return values fails
+    """
     current_signature = inspect.signature(obj)
 
     def echo(a: T) -> T:
@@ -183,6 +226,12 @@ def coerce_callable(obj: Any, type_args: tuple[Any, ...], **kwargs):
 # noinspection PyBroadException
 # the woe of libraries calling user-code: Having no idea what kind of exceptions can be thrown
 def coerce_constructor(obj: Any, type_: Type[T], **kwargs) -> T:
+    """Uses a types constructor to coerce a value to it. Attempts both dict and
+    list spreads before calling the constructor with a single argument.
+    :param obj: The value to coerce.
+    :param type_: The type to coerce to.
+    :param kwargs: See coerce for details
+    :raises ValueError: When type coercion fails and echo_on_failure is False."""
     if isinstance(obj, dict):
         # noinspection PyBroadException
 
@@ -209,6 +258,11 @@ C = TypeVar("C")
 
 
 def coerce_custom(obj: Any, type_: Type[C], **kwargs) -> C:
+    """Coerce a value using custom conversion functions.
+    :param obj: The value to coerce.
+    :param type_: The type to coerce to.
+    :param kwargs: See coerce for details
+    :raises ValueError: When type coercion fails and echo_on_failure is False."""
     converters: dict[Type[C], dict[Type[S], Callable[[S], C]]] = kwargs["custom_type_converters"]
     type_converters = converters[type_]
     if type(obj) in type_converters:
@@ -221,7 +275,10 @@ def coerce_custom(obj: Any, type_: Type[C], **kwargs) -> C:
                 break
             return converter(source)
         else:
-            raise ValueError(
-                f"No custom coercion possible for type {type_}. "
-                f"Coercion to any of the following types not possible: {type_converters.keys()}"
-            )
+            if kwargs["echo_on_failure"]:
+                return obj
+            else:
+                raise ValueError(
+                    f"No custom coercion possible for type {type_}. "
+                    f"Coercion to any of the following types not possible: {type_converters.keys()}"
+                )

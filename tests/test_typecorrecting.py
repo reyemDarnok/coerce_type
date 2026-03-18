@@ -10,13 +10,19 @@ class Simple(TypeCorrecting()):
     a: int
     b: str
 
+
 @pytest.mark.parametrize(
-    "args, a, b", [
+    "args, a, b",
+    [
         ({"a": 1, "b": "text"}, 1, "text"),
         ({"a": "4", "b": True}, 4, "True"),
-    ]
+    ],
 )
-def test_simple(args, a, b,):
+def test_simple(
+    args,
+    a,
+    b,
+):
     coerced = Simple(**args)
     assert coerced.a == a
     assert coerced.b == b

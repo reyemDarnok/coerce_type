@@ -9,6 +9,33 @@ description = "A library providing tools to enforce type hints."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []
+authors = [
+  {name = "Ben Konrad Meyer", email = "ben.k.meyer@gmail.com"}
+]
+maintainers = [
+  {name = "Ben Konrad Meyer", email = "ben.k.meyer@gmail.com"}
+]
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["annotations", "typecasting"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Natural Language :: German",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development :: Libraries"
+]
+[project.urls]
+Repository = "https://github.com/reyemDarnok/coerce_type.git"
+Issues = "https://github.com/reyemDarnok/coerce_type.git"
 
 [tool.hatch.version]
 source = "vcs"
@@ -21,6 +48,7 @@ all = [
   "hatch run lint:check",
   "hatch run lint:format",
   "hatch run test:test-cov",
+  "hatch build"
 ]
 
 [tool.hatch.envs.test]
