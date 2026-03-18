@@ -33,9 +33,9 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
   "Topic :: Software Development :: Libraries"
 ]
-#[project.urls]
-#Repository = "https://github.com/reyemDarnok/coerce_type.git"
-#Issues = "https://github.com/reyemDarnok/coerce_type.git"
+[project.urls]
+Repository = "https://github.com/reyemDarnok/coerce_type.git"
+Issues = "https://github.com/reyemDarnok/coerce_type.git"
 
 [tool.hatch.version]
 source = "vcs"
