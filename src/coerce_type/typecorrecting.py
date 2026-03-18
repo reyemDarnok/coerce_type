@@ -1,4 +1,5 @@
 from dataclasses import fields
+from typing import Type
 
 from coerce_type import coerce
 
@@ -8,7 +9,7 @@ class TypeCorrectingType:
 
 
 # noinspection PyPep8Naming
-def TypeCorrecting():
+def TypeCorrecting() -> Type[TypeCorrectingType]:
     """Create a parent type for a dataclass that enforces the type annotations on its members"""
 
     def __post_init__(self):
@@ -18,4 +19,5 @@ def TypeCorrecting():
         for my_field in my_fields:
             object.__setattr__(self, my_field.name, coerce(self.__getattribute__(my_field.name), my_field.type))
 
+    # noinspection PyTypeChecker
     return type("TypeCorrecting", (TypeCorrectingType,), {"__post_init__": __post_init__})
