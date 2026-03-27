@@ -218,3 +218,11 @@ def test_constructor(value, type_, result) -> None:
 )
 def test_custom(value, result) -> None:
     assert coerce_type.coerce(value, datetime.datetime) == result
+
+
+def test_tuple_mixed():
+    assert coerce_type.coerce(("1", "2.5", 3), tuple[int, float, int]) == (1, 2.5, 3)
+
+
+def test_tuple_ellipsis():
+    assert coerce_type.coerce(("1", "2", 3), tuple[int, ...]) == (1, 2, 3)

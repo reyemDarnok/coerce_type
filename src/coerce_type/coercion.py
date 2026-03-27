@@ -95,10 +95,32 @@ def coerce_generic(obj: Any, origin_type: ParamSpec, type_args: tuple[Any, ...],
         return {coerce(key, key_type, **kwargs): coerce(value, value_type, **kwargs) for key, value in obj.items()}
     if origin_type in (Union, UnionType):
         return coerce_union(obj, type_args, **kwargs)
+    if origin_type == tuple:
+        return coerce_tuple(obj, type_args, **kwargs)
     if kwargs["echo_on_failure"]:
         return obj
     else:
         raise TypeError(f"Cannot recognize generic type {origin_type}")
+
+
+def coerce_tuple(obj: Any, type_args: tuple[Any, ...], **kwargs) -> T:
+    """Coerce a value to a tuple of a given type.
+    :param obj: The value to coerce.
+    :param type_args: The member types of the tuple
+    :param kwargs: See coerce for details
+    :raises ValueError: When type coercion fails and echo_on_failure is False."""
+    result_data = []
+    if type_args[-1] == ...:
+        type_args = type_args[:-1] + (type_args[-2],) * (len(obj) - len(type_args) + 1)
+    if len(obj) != len(type_args):
+        if kwargs["echo_on_failure"]:
+            return obj
+        else:
+            raise ValueError(f"Cannot coerce iterable with length {len(obj)} to tuple of length {len(type_args)}")
+    for member, type_ in zip(obj, type_args):
+        result_data.append(coerce(member, type_, **kwargs))
+
+    return tuple(result_data)
 
 
 def coerce_union(obj: Any, type_args: tuple[Any, ...], **kwargs) -> T:
