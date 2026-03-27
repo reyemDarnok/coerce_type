@@ -37,7 +37,9 @@ def TypeCorrecting(exclude_fields=None, **kwargs) -> Type[TypeCorrectingType]:
         for my_field in my_fields:
             if my_field.name in exclude_fields:
                 continue
-            object.__setattr__(self, my_field.name, coerce(self.__getattribute__(my_field.name), my_field.type, **kwargs))
+            object.__setattr__(
+                self, my_field.name, coerce(self.__getattribute__(my_field.name), my_field.type, **kwargs)
+            )
 
     # noinspection PyDecorator
     @classmethod

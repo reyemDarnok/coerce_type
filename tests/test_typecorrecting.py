@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from coerce_type import TypeCorrecting
+from coerce_type import TypeCorrecting, TypeCorrectingType
 
 
 @dataclass
@@ -44,6 +44,7 @@ def test_from_dict(
     assert coerced.a == a
     assert coerced.b == b
 
+
 @pytest.mark.parametrize(
     "args, string_truthiness, result",
     [
@@ -52,8 +53,49 @@ def test_from_dict(
     ],
 )
 def test_pass_through(args, string_truthiness, result):
-    class PassThrough(TypeCorrecting(pass_through={"string_truthiness": string_truthiness})):
+    @dataclass()
+    class PassThrough(TypeCorrecting(str_truthiness=string_truthiness)):
         bt: bool
+
     coerced = PassThrough.from_dict(args)
     assert coerced.bt == result
 
+
+@pytest.mark.parametrize(
+    "args, exclude, a, b",
+    [
+        ({"a": "1", "b": "2"}, ["b"], 1, "2"),
+        ({"a": "1", "b": "2"}, ["a"], "1", 2),
+        ({"a": "1", "b": "2"}, ["a", "b"], "1", "2"),
+        ({"a": "1", "b": "2"}, [], 1, 2),
+    ],
+)
+def test_exclusion(args, exclude, a, b):
+    @dataclass()
+    class Exclude(TypeCorrecting(exclude_fields=exclude)):
+        a: int
+        b: int
+
+    coerced = Exclude.from_dict(args)
+    assert coerced.a == a
+    assert coerced.b == b
+
+
+def test_superclass_complain_init():
+    with pytest.raises(NotImplementedError):
+
+        @dataclass
+        class TestClass(TypeCorrectingType):
+            pass
+
+        TestClass()
+
+
+def test_superclass_complain_from_dict():
+    with pytest.raises(NotImplementedError):
+
+        @dataclass
+        class TestClass(TypeCorrectingType):
+            pass
+
+        TestClass.from_dict({})
