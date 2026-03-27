@@ -1,7 +1,12 @@
 import inspect
-from abc import ABC, abstractmethod
+import sys
 from dataclasses import fields
-from typing import Type, Self
+
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    Self = "TypeCorrectingType"
+from typing import Type
 
 from coerce_type import coerce
 
