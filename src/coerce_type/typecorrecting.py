@@ -1,27 +1,25 @@
 import inspect
 from abc import ABC, abstractmethod
 from dataclasses import fields
-from typing import Type
+from typing import Type, Self
 
 from coerce_type import coerce
 
 
-class TypeCorrectingType(ABC):
-    @abstractmethod
-    def __post_init__(self):
-        pass
+class TypeCorrectingType:
+    def __post_init__(self) -> None:
+        raise NotImplementedError("Call TypeCorrecting instead of using this as a base class")
 
     @classmethod
-    @abstractmethod
-    def from_dict(cls, env):
-        pass
+    def from_dict(cls, env: dict) -> Self:
+        raise NotImplementedError("Call TypeCorrecting instead of using this as a base class")
 
 
 # noinspection PyPep8Naming
 def TypeCorrecting() -> Type[TypeCorrectingType]:
     """Create a parent type for a dataclass that enforces the type annotations on its members"""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # noinspection PyDataclass,PyTypeChecker
         # making TypeCorrecting a dataclass unnecessarily locks in certain choices
         my_fields = fields(self)
