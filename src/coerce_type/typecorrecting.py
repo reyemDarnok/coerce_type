@@ -1,12 +1,12 @@
 import inspect
 import sys
 from dataclasses import fields
+from typing import Type, TypeAlias
 
 if sys.version_info >= (3, 11):
     from typing import Self
 else:
-    Self = "TypeCorrectingType"
-from typing import Type
+    Self: TypeAlias = "TypeCorrectingType"
 
 from coerce_type import coerce
 
@@ -21,15 +21,23 @@ class TypeCorrectingType:
 
 
 # noinspection PyPep8Naming
-def TypeCorrecting() -> Type[TypeCorrectingType]:
-    """Create a parent type for a dataclass that enforces the type annotations on its members"""
+def TypeCorrecting(exclude_fields=None, **kwargs) -> Type[TypeCorrectingType]:
+    """
+    Create a parent type for a dataclass that enforces the type annotations on its members
+    :param exclude_fields: Ignore these fields when coercing. Defaults to []
+    :param kwargs: Passed through to coerce as kwargs"""
+
+    if exclude_fields is None:
+        exclude_fields = []
 
     def __post_init__(self) -> None:
         # noinspection PyDataclass,PyTypeChecker
         # making TypeCorrecting a dataclass unnecessarily locks in certain choices
         my_fields = fields(self)
         for my_field in my_fields:
-            object.__setattr__(self, my_field.name, coerce(self.__getattribute__(my_field.name), my_field.type))
+            if my_field.name in exclude_fields:
+                continue
+            object.__setattr__(self, my_field.name, coerce(self.__getattribute__(my_field.name), my_field.type, **kwargs))
 
     # noinspection PyDecorator
     @classmethod

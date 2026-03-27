@@ -43,3 +43,17 @@ def test_from_dict(
     coerced = Simple.from_dict(args)
     assert coerced.a == a
     assert coerced.b == b
+
+@pytest.mark.parametrize(
+    "args, string_truthiness, result",
+    [
+        ({"bt": "False"}, True, True),
+        ({"bt": "False"}, False, False),
+    ],
+)
+def test_pass_through(args, string_truthiness, result):
+    class PassThrough(TypeCorrecting(pass_through={"string_truthiness": string_truthiness})):
+        bt: bool
+    coerced = PassThrough.from_dict(args)
+    assert coerced.bt == result
+
